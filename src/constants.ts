@@ -20,3 +20,20 @@ export const regex = {
 		simple: /(rgba|hsla|\/)/gi,
 	},
 };
+
+//#region hue-rotate
+/** Angle units as in CSS `<angle>` */
+export enum AngleUnit {
+	Deg = 'deg',
+	Grad = 'grad',
+	Rad = 'rad',
+	Turn = 'turn',
+}
+
+export const degreesPerAngleUnit: Record<AngleUnit, number> = {
+	[AngleUnit.Deg]: 1,
+	[AngleUnit.Grad]: 360 / 400,
+	[AngleUnit.Rad]: 180 / Math.PI,
+	[AngleUnit.Turn]: 360,
+};
+//#endregion hue-rotate

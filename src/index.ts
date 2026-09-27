@@ -1,5 +1,9 @@
 import { regex } from './constants';
 import { clamp, hexSegmentParser, isNil, rgbToHsl, rgbToHwb, segmentToHex } from './utils';
+//#region hue-rotate
+import { AngleUnit, degreesPerAngleUnit } from './constants';
+import { angleToDegrees, normalizeHue, rgbToHslRaw } from './utils';
+//#endregion hue-rotate
 
 type ColorType = string | Color | Array<number>;
 type ColorInitType = 'rgb' | 'hsl' | 'hwb';
@@ -154,19 +158,25 @@ class Color extends Object {
 	}
 
 	private parseRGB(color?: Array<number>) {
-		const [r, g, b, a = 0] = color ?? this.initialValue.replace(regex.rgb.parser, '').split(',').map(parseFloat);
+		//#region Исправление бага B3
+		const [r, g, b, a = 1] = color ?? this.initialValue.replace(regex.rgb.parser, '').split(',').map(parseFloat);
+		//#endregion Исправление бага B3
 
 		this.r = clamp(r, 0, 255);
 		this.g = clamp(g, 0, 255);
 		this.b = clamp(b, 0, 255);
 
-		if (a) {
+		//#region Исправление бага B3
+		if (Number.isFinite(a)) {
 			this.a = clamp(a);
 		}
+		//#endregion Исправление бага B3
 	}
 
 	private parseHSL(color?: Array<number>) {
-		let [h, s, l, a = 0] = color ?? this.initialValue.replace(regex.hsl.parser, '').split(',').map(parseFloat);
+		//#region Исправление бага B3
+		let [h, s, l, a = 1] = color ?? this.initialValue.replace(regex.hsl.parser, '').split(',').map(parseFloat);
+		//#endregion Исправление бага B3
 
 		h = h % 360;
 
@@ -187,13 +197,17 @@ class Color extends Object {
 		this.g = hsl2rgb(8);
 		this.b = hsl2rgb(4);
 
-		if (a) {
+		//#region Исправление бага B3
+		if (Number.isFinite(a)) {
 			this.a = clamp(a);
 		}
+		//#endregion Исправление бага B3
 	}
 
 	private parseHWB(color?: Array<number>) {
-		let [h, w, b, a = 0] = color ?? this.initialValue.replace(regex.hwb.parser, ',').split(',').filter(Boolean).map(parseFloat);
+		//#region Исправление бага B3
+		let [h, w, b, a = 1] = color ?? this.initialValue.replace(regex.hwb.parser, ',').split(',').filter(Boolean).map(parseFloat);
+		//#endregion Исправление бага B3
 
 		w /= 100;
 		b /= 100;
@@ -202,9 +216,11 @@ class Color extends Object {
 			const g = w / (w + b);
 			this.r = this.g = this.b = clamp(g, 0, 255);
 
-			if (a) {
+			//#region Исправление бага B3
+			if (Number.isFinite(a)) {
 				this.a = clamp(a);
 			}
+			//#endregion Исправление бага B3
 		} else {
 			this.parseHSL([h, 100, 50, a]);
 
@@ -285,6 +301,43 @@ class Color extends Object {
 
 		return this;
 	}
+
+	//#region hue-rotate
+	/**
+	 * Rotate hue in HSL model. Saturation, lightness and alpha are kept
+	 * @param value - Angle value, any sign and size
+	 * @param unit - Angle unit: deg (default), grad, rad or turn
+	 * @returns this
+	 */
+	hueRotate(value: number, unit: AngleUnit | `${AngleUnit}` = AngleUnit.Deg): Color {
+		if (typeof value !== 'number' || !Number.isFinite(value)) {
+			console.warn(`[Color]: hue rotation angle ${value} is invalid`);
+			return this;
+		}
+
+		if (!Object.prototype.hasOwnProperty.call(degreesPerAngleUnit, unit)) {
+			console.warn(`[Color]: unknown angle unit '${unit}'. Default angle unit is 'deg'`);
+			unit = AngleUnit.Deg;
+		}
+
+		const [h, s, l] = rgbToHslRaw(this.r / 255, this.g / 255, this.b / 255);
+
+		// Achromatic color has no hue to rotate
+		if (s === 0 || Number.isNaN(h)) {
+			return this;
+		}
+
+		//#region Исправление бага B3
+		this.parseHSL([normalizeHue(h + angleToDegrees(value, unit)), s * 100, l * 100, this.a]);
+		//#endregion Исправление бага B3
+
+		return this;
+	}
+	//#endregion hue-rotate
 }
+
+//#region hue-rotate
+export { AngleUnit } from './constants';
+//#endregion hue-rotate
 
 export default Color;
