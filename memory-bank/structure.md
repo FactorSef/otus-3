@@ -6,12 +6,17 @@ colorful/
 │   ├── index.ts        # класс Color (default export) — весь публичный API
 │   ├── utils.ts        # чистые функции: isNil, clamp, hexSegmentParser, segmentToHex, rgbToHsl, rgbToHwb
 │   └── constants.ts    # regex: распознавание и парсинг форматов hex/rgb/hsl/hwb/alpha
+├── tests/
+│   ├── utils.test.ts   # тесты функций из src/utils.ts
+│   └── color.test.ts   # тесты класса Color
+├── jest.config.js      # ts-jest, roots: tests/
 ├── es/                 # (gitignore) сборка CommonJS — package.json "main"
 ├── lib/                # (gitignore) сборка ES2015 + .d.ts — "module", "types"
-├── tsconfig.json       # база: rootDir=src, target ES2015, declaration, removeComments; strict выключен
+├── coverage/           # (gitignore) отчёт npm run test:coverage
+├── tsconfig.json       # база: include=src, rootDir=src, target ES2015, declaration, removeComments; strict выключен
 ├── tsconfig.lib.json   # outDir lib, module ES2015
 ├── tsconfig.es.json    # outDir es, module CommonJS
-├── package.json        # devDeps: typescript 4.9, prettier 2.8.4, ts-jest, @types/jest (jest не установлен)
+├── package.json        # devDeps: typescript 4.9, prettier 2.8.4, jest 29, ts-jest, @types/jest; скрипты build, test, test:coverage
 ├── .prettierrc         # printWidth 180; для ts: табы (4), одинарные кавычки, trailingComma es5, semi
 ├── .editorconfig       # ts — табы, LF; json — 2 пробела
 ├── .vscode/settings.json # formatOnSave через Prettier

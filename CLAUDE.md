@@ -16,10 +16,12 @@
 
 ```bash
 npm install
-npm run build   # tsc → lib/ (ESM + .d.ts) и es/ (CommonJS)
+npm run build          # tsc → lib/ (ESM + .d.ts) и es/ (CommonJS)
+npm test               # jest (ts-jest), тесты в tests/
+npm run test:coverage  # то же с отчётом покрытия
 ```
 
-Тестов пока нет (см. bugs.md, I1).
+Известные баги покрыты тестами `test.failing` с номером бага в названии. Исправил баг — замени `test.failing` на `test`.
 
 ## Правила
 
