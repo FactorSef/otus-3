@@ -64,17 +64,43 @@ describe('constructor', () => {
 			expect(rgba(color)).toEqual([255, 136, 0, 1]);
 		});
 
-		test.failing('B3: нулевая альфа в rgba', () => {
-			expect(new Color('rgba(0, 0, 0, 0)').a).toBe(0);
-		});
+		//#region Исправление бага B3
+		describe('B3: нулевая альфа', () => {
+			test.each(['rgba(0, 0, 0, 0)', 'hsla(0, 0%, 0%, 0)', 'hwb(0 0% 0% / 0)', 'hwb(0 60% 40% / 0)'])('%p -> a = 0', (value) => {
+				const color = new Color(value);
+				expect(color.a).toBe(0);
+				expect(color.hasAlpha).toBe(true);
+			});
 
-		test.failing('B3: нулевая альфа в hsla', () => {
-			expect(new Color('hsla(0, 0%, 0%, 0)').a).toBe(0);
-		});
+			test.each([
+				[[0, 0, 0, 0], 'rgb'],
+				[[0, 100, 50, 0], 'hsl'],
+				[[0, 0, 0, 0], 'hwb'],
+			] as const)('массив %p, %p -> a = 0', (value, type) => {
+				expect(new Color([...value], type).a).toBe(0);
+			});
 
-		test.failing('B3: нулевая альфа в hwb', () => {
-			expect(new Color('hwb(0 0% 0% / 0)').a).toBe(0);
+			test.each(['rgb(0, 0, 0)', 'hsl(0, 0%, 0%)', 'hwb(0 0% 0%)', 'hwb(0 60% 40%)', '#000000'])('без альфы %p -> a = 1', (value) => {
+				expect(new Color(value).a).toBe(1);
+			});
+
+			test.each([
+				[[0, 0, 0], 'rgb'],
+				[[0, 100, 50], 'hsl'],
+				[[0, 0, 0], 'hwb'],
+			] as const)('массив без альфы %p, %p -> a = 1', (value, type) => {
+				expect(new Color([...value], type).a).toBe(1);
+			});
+
+			test('некорректная альфа игнорируется', () => {
+				expect(new Color('rgba(0, 0, 0, )').a).toBe(1);
+			});
+
+			test('hueRotate сохраняет нулевую альфу', () => {
+				expect(new Color('rgba(255, 0, 0, 0)').hueRotate(120).a).toBe(0);
+			});
 		});
+		//#endregion Исправление бага B3
 
 		test.failing('B4: пробельный синтаксис CSS Color Level 4', () => {
 			expect(rgba(new Color('rgb(255 0 0 / 0.5)'))).toEqual([255, 0, 0, 0.5]);

@@ -158,19 +158,25 @@ class Color extends Object {
 	}
 
 	private parseRGB(color?: Array<number>) {
-		const [r, g, b, a = 0] = color ?? this.initialValue.replace(regex.rgb.parser, '').split(',').map(parseFloat);
+		//#region Исправление бага B3
+		const [r, g, b, a = 1] = color ?? this.initialValue.replace(regex.rgb.parser, '').split(',').map(parseFloat);
+		//#endregion Исправление бага B3
 
 		this.r = clamp(r, 0, 255);
 		this.g = clamp(g, 0, 255);
 		this.b = clamp(b, 0, 255);
 
-		if (a) {
+		//#region Исправление бага B3
+		if (Number.isFinite(a)) {
 			this.a = clamp(a);
 		}
+		//#endregion Исправление бага B3
 	}
 
 	private parseHSL(color?: Array<number>) {
-		let [h, s, l, a = 0] = color ?? this.initialValue.replace(regex.hsl.parser, '').split(',').map(parseFloat);
+		//#region Исправление бага B3
+		let [h, s, l, a = 1] = color ?? this.initialValue.replace(regex.hsl.parser, '').split(',').map(parseFloat);
+		//#endregion Исправление бага B3
 
 		h = h % 360;
 
@@ -191,13 +197,17 @@ class Color extends Object {
 		this.g = hsl2rgb(8);
 		this.b = hsl2rgb(4);
 
-		if (a) {
+		//#region Исправление бага B3
+		if (Number.isFinite(a)) {
 			this.a = clamp(a);
 		}
+		//#endregion Исправление бага B3
 	}
 
 	private parseHWB(color?: Array<number>) {
-		let [h, w, b, a = 0] = color ?? this.initialValue.replace(regex.hwb.parser, ',').split(',').filter(Boolean).map(parseFloat);
+		//#region Исправление бага B3
+		let [h, w, b, a = 1] = color ?? this.initialValue.replace(regex.hwb.parser, ',').split(',').filter(Boolean).map(parseFloat);
+		//#endregion Исправление бага B3
 
 		w /= 100;
 		b /= 100;
@@ -206,9 +216,11 @@ class Color extends Object {
 			const g = w / (w + b);
 			this.r = this.g = this.b = clamp(g, 0, 255);
 
-			if (a) {
+			//#region Исправление бага B3
+			if (Number.isFinite(a)) {
 				this.a = clamp(a);
 			}
+			//#endregion Исправление бага B3
 		} else {
 			this.parseHSL([h, 100, 50, a]);
 
@@ -315,7 +327,9 @@ class Color extends Object {
 			return this;
 		}
 
-		this.parseHSL([normalizeHue(h + angleToDegrees(value, unit)), s * 100, l * 100]);
+		//#region Исправление бага B3
+		this.parseHSL([normalizeHue(h + angleToDegrees(value, unit)), s * 100, l * 100, this.a]);
+		//#endregion Исправление бага B3
 
 		return this;
 	}

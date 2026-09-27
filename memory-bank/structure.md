@@ -43,13 +43,15 @@ colorful/
 
 Модель хранения — всегда RGB. HSL/HWB при парсинге сразу переводятся в RGB (`parseHWB` использует `parseHSL([h,100,50,a])`), обратно — через `rgbToHsl` / `rgbToHwb` при выводе.
 
+Альфа в `parseRGB` / `parseHSL` / `parseHWB`: если не указана — `1`; записывается, только если это конечное число (`Number.isFinite`), затем `clamp` 0..1. Внутренние вызовы `parse*` с массивом должны передавать `this.a`, иначе альфа сбросится в `1`.
+
 **Проверки** — геттеры `isValid`, `isHEX`, `isHEX24`, `isHEX32`, `isRGB`, `isHSL`, `isHWB`, `hasAlpha` и одноимённые `static`-методы (создают `new Color(str)` и читают геттер). Регэкспы из `constants` клонируются через `new RegExp(...)`, т.к. имеют флаг `g` (иначе `lastIndex` ломал бы повторный `test`).
 
 **Вывод** — `toHex(): string[]`, `toHexString`, `toRgbString`, `toHslString`, `toHwbString` (все с `forceAlpha?`), `toString()` → HEX, `[Symbol.toPrimitive]` → строка для `'default'|'string'`.
 
 **Мутация** (возвращают `this`)
 - `alpha()` / `alpha(value 0..100): this`.
-- `hueRotate(value, unit = AngleUnit.Deg): this` — поворот тона в HSL: `rgbToHslRaw` → `h + angleToDegrees(value, unit)` → `normalizeHue` → `parseHSL([h, s*100, l*100])`. Альфа в `parseHSL` не передаётся и остаётся прежней. Серые (s = 0) не меняются. Невалидный угол → `console.warn`, без изменений; неизвестная единица → `console.warn`, считается `deg` (проверка по ключам `degreesPerAngleUnit`, без `Object.values`/`includes` — target ES2015).
+- `hueRotate(value, unit = AngleUnit.Deg): this` — поворот тона в HSL: `rgbToHslRaw` → `h + angleToDegrees(value, unit)` → `normalizeHue` → `parseHSL([h, s*100, l*100, this.a])`. Альфа передаётся явно: `parse*` без альфы в массиве ставят `a = 1`. Серые (s = 0) не меняются. Невалидный угол → `console.warn`, без изменений; неизвестная единица → `console.warn`, считается `deg` (проверка по ключам `degreesPerAngleUnit`, без `Object.values`/`includes` — target ES2015).
 
 ## src/utils.ts
 
