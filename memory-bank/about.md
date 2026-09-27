@@ -11,6 +11,7 @@
 - **Работа с прозрачностью** — прочитать/изменить alpha и получить строку с альфа-каналом.
 - **Создание цвета из чисел** — собрать цвет из массива компонент (например, результат расчётов) с указанием модели.
 - **Клонирование** — `new Color(otherColor)` копирует компоненты.
+- **Поворот тона** — построить палитру (комплементарный, триада) из базового цвета через `hueRotate`.
 
 ## Установка
 
@@ -54,6 +55,20 @@ white.toRgbString(); // 'rgba(255, 255, 255, 0.5)'
 
 // forceAlpha — принудительно выводить альфа-канал
 white.alpha(100).toRgbString(true); // 'rgba(255, 255, 255, 1)'
+
+// Поворот тона в HSL: меняет экземпляр, возвращает this; s, l и alpha сохраняются
+// Единицы: AngleUnit.Deg (по умолчанию), Grad, Rad, Turn — или строки 'deg' | 'grad' | 'rad' | 'turn'
+import { AngleUnit } from '@factor-sef/colorful';
+
+const red = new Color('#ff0000');
+red.hueRotate(120).toHexString();                   // '#00ff00'
+new Color('#ff0000').hueRotate(0.5, AngleUnit.Turn); // '#00ffff'
+new Color('#ff0000').hueRotate(Math.PI, 'rad');      // '#00ffff'
+new Color('#ff0000').hueRotate(-120);                // '#0000ff' (отрицательный угол — в обратную сторону)
+new Color(red).hueRotate(30);                        // поворот копии, red не меняется
+new Color('#808080').hueRotate(90);                  // серый не меняется
+// Некорректный угол (NaN, Infinity) — console.warn, цвет не меняется;
+// неизвестная единица — console.warn, угол считается в deg
 ```
 
 ### Поддерживаемые входные форматы
@@ -86,5 +101,5 @@ npm run test:coverage  # с отчётом покрытия в coverage/
 
 ## Roadmap (из README)
 
-Сделано: HEX, RGB, HSL, HWB, get/set alpha.
-Не сделано: hue rotation, saturation, lightness, blackness, scale, greyscale.
+Сделано: HEX, RGB, HSL, HWB, get/set alpha, hue rotation (`hueRotate`; только set, текущий тон — через `toHslString()`).
+Не сделано: saturation, lightness, blackness, scale, greyscale.

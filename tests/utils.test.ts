@@ -1,6 +1,10 @@
 //#region Добавление Unit-тестов
 import type Color from '../src/index';
 import { clamp, hexSegmentParser, isNil, rgbToHsl, rgbToHwb, segmentToHex } from '../src/utils';
+//#region hue-rotate
+import { AngleUnit } from '../src/constants';
+import { angleToDegrees, normalizeHue, rgbToHslRaw } from '../src/utils';
+//#endregion hue-rotate
 
 // Тесты с `test.failing` описывают корректное поведение для известных багов (memory-bank/bugs.md).
 // Когда баг исправлен, такой тест начинает проходить, jest падает — замените `test.failing` на `test`.
@@ -137,3 +141,59 @@ describe('rgbToHwb', () => {
 	});
 });
 //#endregion Добавление Unit-тестов
+
+//#region hue-rotate
+describe('angleToDegrees', () => {
+	test.each([
+		[90, AngleUnit.Deg, 90],
+		[200, AngleUnit.Grad, 180],
+		[Math.PI, AngleUnit.Rad, 180],
+		[0.25, AngleUnit.Turn, 90],
+		[-1, 'turn', -360],
+		[400, 'grad', 360],
+	] as const)('%p %p -> %p', (value, unit, expected) => {
+		expect(angleToDegrees(value, unit)).toBeCloseTo(expected, 10);
+	});
+});
+
+describe('normalizeHue', () => {
+	test.each([
+		[0, 0],
+		[90, 90],
+		[360, 0],
+		[720, 0],
+		[-30, 330],
+		[-360, 0],
+		[450.5, 90.5],
+	])('%p -> %p', (value, expected) => {
+		expect(normalizeHue(value)).toBe(expected);
+	});
+});
+
+describe('rgbToHslRaw', () => {
+	test('возвращает неокруглённые значения, s и l в 0..1', () => {
+		expect(rgbToHslRaw(1, 0, 0)).toEqual([0, 1, 0.5]);
+
+		const [h, s, l] = rgbToHslRaw(18 / 255, 52 / 255, 86 / 255);
+		expect(h).toBeCloseTo(210, 10);
+		expect(s).toBeCloseTo(0.6538, 4);
+		expect(l).toBeCloseTo(0.2039, 4);
+	});
+
+	test('hue ахроматического цвета — NaN, s = 0', () => {
+		const [h, s] = rgbToHslRaw(0.5, 0.5, 0.5);
+		expect(h).toBeNaN();
+		expect(s).toBe(0);
+	});
+
+	test('rgbToHsl после рефакторинга — округлённый rgbToHslRaw', () => {
+		expect(rgbToHsl(18 / 255, 52 / 255, 86 / 255)).toEqual([210, 65, 20]);
+
+		for (let i = 0; i < 1000; i++) {
+			const [r, g, b] = [Math.random(), Math.random(), Math.random()];
+			const [h, s, l] = rgbToHslRaw(r, g, b);
+			expect(rgbToHsl(r, g, b)).toEqual([Math.round(h), Math.round(s * 100), Math.round(l * 100)]);
+		}
+	});
+});
+//#endregion hue-rotate

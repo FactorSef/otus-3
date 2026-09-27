@@ -1,5 +1,9 @@
 import { regex } from './constants';
 import { clamp, hexSegmentParser, isNil, rgbToHsl, rgbToHwb, segmentToHex } from './utils';
+//#region hue-rotate
+import { AngleUnit, degreesPerAngleUnit } from './constants';
+import { angleToDegrees, normalizeHue, rgbToHslRaw } from './utils';
+//#endregion hue-rotate
 
 type ColorType = string | Color | Array<number>;
 type ColorInitType = 'rgb' | 'hsl' | 'hwb';
@@ -285,6 +289,41 @@ class Color extends Object {
 
 		return this;
 	}
+
+	//#region hue-rotate
+	/**
+	 * Rotate hue in HSL model. Saturation, lightness and alpha are kept
+	 * @param value - Angle value, any sign and size
+	 * @param unit - Angle unit: deg (default), grad, rad or turn
+	 * @returns this
+	 */
+	hueRotate(value: number, unit: AngleUnit | `${AngleUnit}` = AngleUnit.Deg): Color {
+		if (typeof value !== 'number' || !Number.isFinite(value)) {
+			console.warn(`[Color]: hue rotation angle ${value} is invalid`);
+			return this;
+		}
+
+		if (!Object.prototype.hasOwnProperty.call(degreesPerAngleUnit, unit)) {
+			console.warn(`[Color]: unknown angle unit '${unit}'. Default angle unit is 'deg'`);
+			unit = AngleUnit.Deg;
+		}
+
+		const [h, s, l] = rgbToHslRaw(this.r / 255, this.g / 255, this.b / 255);
+
+		// Achromatic color has no hue to rotate
+		if (s === 0 || Number.isNaN(h)) {
+			return this;
+		}
+
+		this.parseHSL([normalizeHue(h + angleToDegrees(value, unit)), s * 100, l * 100]);
+
+		return this;
+	}
+	//#endregion hue-rotate
 }
+
+//#region hue-rotate
+export { AngleUnit } from './constants';
+//#endregion hue-rotate
 
 export default Color;
