@@ -5,3 +5,6 @@ tsconfig.*
 .editorconfig
 .prettierrc
 .github
+tests
+jest.config.js
+coverage

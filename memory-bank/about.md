@@ -75,7 +75,14 @@ npm run build:lib  # → lib/  (ES2015 modules, .d.ts) — поля "module" и 
 npm run build:es   # → es/   (CommonJS)              — поле "main"
 ```
 
-Тестов и test-скрипта нет.
+## Тесты
+
+```bash
+npm test               # unit-тесты (jest 29 + ts-jest)
+npm run test:coverage  # с отчётом покрытия в coverage/
+```
+
+Тесты лежат в `tests/`. Известные баги из `bugs.md` описаны через `test.failing`: такой тест проверяет правильное поведение и пока падает. После исправления бага jest потребует перевести его в обычный `test`.
 
 ## Roadmap (из README)
 
