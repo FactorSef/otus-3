@@ -1,5 +1,8 @@
 //#region Добавление Unit-тестов
 import Color from '../src/index';
+//#region hue-rotate
+import { AngleUnit } from '../src/index';
+//#endregion hue-rotate
 
 // Тесты с `test.failing` описывают корректное поведение для известных багов (memory-bank/bugs.md).
 // Когда баг исправлен, такой тест начинает проходить, jest падает — замените `test.failing` на `test`.
@@ -335,3 +338,77 @@ describe('alpha', () => {
 	});
 });
 //#endregion Добавление Unit-тестов
+
+//#region hue-rotate
+describe('hueRotate', () => {
+	test.each([
+		[120, undefined, '#00ff00'],
+		[240, 'deg', '#0000ff'],
+		[-120, undefined, '#0000ff'],
+		[0.5, AngleUnit.Turn, '#00ffff'],
+		[Math.PI, AngleUnit.Rad, '#00ffff'],
+		[200, AngleUnit.Grad, '#00ffff'],
+		[-200, AngleUnit.Grad, '#00ffff'],
+	] as const)('#ff0000, %p %p -> %p', (value, unit, expected) => {
+		expect(new Color('#ff0000').hueRotate(value, unit).toHexString()).toBe(expected);
+	});
+
+	test.each([
+		[0, AngleUnit.Deg],
+		[360, AngleUnit.Deg],
+		[720, AngleUnit.Deg],
+		[1, AngleUnit.Turn],
+		[2 * Math.PI, AngleUnit.Rad],
+		[400, AngleUnit.Grad],
+	] as const)('поворот на %p %p не меняет цвет', (value, unit) => {
+		expect(new Color('#123456').hueRotate(value, unit).toHexString()).toBe('#123456');
+	});
+
+	test('сохраняет насыщенность и светлоту', () => {
+		const color = new Color('#123456').hueRotate(90);
+		expect(color.toHslString()).toBe('hsl(300, 65%, 20%)');
+	});
+
+	test('повороты складываются', () => {
+		const color = new Color('#ff0000').hueRotate(60).hueRotate(60);
+		expect(color.toHexString()).toBe('#00ff00');
+	});
+
+	test.each(['#808080', '#ffffff', '#000000'])('серый %p не меняется', (value) => {
+		expect(new Color(value).hueRotate(90).toHexString()).toBe(value);
+	});
+
+	test('альфа сохраняется', () => {
+		const color = new Color([255, 0, 0, 0.5], 'rgb').hueRotate(120);
+		expect(rgba(color)).toEqual([0, 255, 0, 0.5]);
+	});
+
+	test('изменяет экземпляр и возвращает this', () => {
+		const color = new Color('#ff0000');
+		expect(color.hueRotate(10)).toBe(color);
+		expect(color.toHexString()).not.toBe('#ff0000');
+	});
+
+	test('цепочка с alpha()', () => {
+		const color = new Color('#ff0000').hueRotate(120).alpha(50);
+		expect(rgba(color)).toEqual([0, 255, 0, 0.5]);
+	});
+
+	test.each([NaN, Infinity, -Infinity, '90' as unknown as number])('некорректный угол %p: цвет не меняется, предупреждение', (value) => {
+		const color = new Color('#ff0000');
+		expect(color.hueRotate(value)).toBe(color);
+		expect(color.toHexString()).toBe('#ff0000');
+		expect(warn).toHaveBeenCalledTimes(1);
+	});
+
+	test('неизвестная единица: поворот в deg, предупреждение', () => {
+		const color = new Color('#ff0000').hueRotate(120, 'foo' as AngleUnit);
+		expect(color.toHexString()).toBe('#00ff00');
+		expect(warn).toHaveBeenCalledTimes(1);
+	});
+
+	test('AngleUnit — строковый enum', () => {
+		expect(Object.values(AngleUnit)).toEqual(['deg', 'grad', 'rad', 'turn']);
+	});
+});
+//#endregion hue-rotate
